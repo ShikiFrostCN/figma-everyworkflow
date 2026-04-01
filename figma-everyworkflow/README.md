@@ -1,74 +1,109 @@
-# figma-everyworkflow
+# Figma MCP Server Guide
 
-> **作者 / Author:** [shiki](https://github.com/shiki)  
-> **基于 / Based on:** [figma/mcp-server-guide](https://github.com/figma/mcp-server-guide)  
-> **协议 / License:** MIT
+The Figma MCP server brings Figma directly into your workflow by providing important design information and context to AI agents generating code from Figma design files.
 
----
+> [!NOTE]
+> Rate limits apply to Figma MCP server tools that read data from Figma. Some tools, such as those that write to Figma files, are exempt from the rate limits.
+> <br><br>
+> Users on the Starter plan or with View or Collab seats on paid plans will be limited to up to 6 tool calls per month.
+> <br><br>
+> Users with a [Dev or Full seat](https://help.figma.com/hc/en-us/articles/27468498501527-Updates-to-Figma-s-pricing-seats-and-billing-experience#h_01JCPBM8X2MBEXTABDM92HWZG4) on the [Professional, Organization, or Enterprise plans](https://help.figma.com/hc/en-us/articles/360040328273-Figma-plans-and-features) have per minute rate limits, which follow the same limits as the Tier 1 [Figma REST API](https://developers.figma.com/docs/rest-api/rate-limits/). As with Figma’s REST API, Figma reserves the right to change rate limits.
 
-## 简介 | Introduction
+For the complete set of Figma MCP server docs, see our [developer documentation](https://developers.figma.com/docs/figma-mcp-server/). By using the Figma MCP server and the related resources (including these skills), you agree to the [Figma Developer Terms](https://www.figma.com/legal/developer-terms/). These skills are currently available as a Beta feature.
 
-**figma-everyworkflow** 是 Figma 官方 MCP Server 指南的增强版本，专为希望将 Figma 设计无缝融入任何开发工作流的团队和个人打造。  
-支持自然语言驱动、一键安装、中英双语文档，让 AI 辅助设计→代码的工作流变得极简高效。
+## Features
 
-**figma-everyworkflow** is an enhanced fork of the official Figma MCP Server Guide, built for teams and individuals who want to seamlessly integrate Figma into any development workflow.  
-Features natural language prompts, one-click installation, and bilingual documentation.
+- **AI-powered UI generation in Figma** *(new)*
 
----
+  Generate polished, design-system-consistent Figma screens directly from your IDE — no need for external tools like UX Pilot. Describe a UI in plain language, point at an HTML file, or hand over a wireframe image, and the agent builds a complete Figma screen section by section using your existing design system components, variables, and styles.
 
-## 快速开始 | Quick Start
+  Supported input modes:
+  - **Natural language** — "Create a SaaS pricing page with 3 tiers"
+  - **HTML / source files** — "Convert src/pages/landing.html to a Figma design"
+  - **Wireframe or prototype images** — "Reproduce this wireframe in high-fidelity using our design system"
+  - **Multiple design directions** — "Generate a light and dark version side by side"
 
-### 一键安装 | One-Click Install
+  Powered by the `use_figma` + `search_design_system` tools and the `figma-generate-ui` skill.
 
-**macOS / Linux:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/shiki/figma-everyworkflow/main/install.sh | bash
+- **Write to the canvas**: Create and modify native Figma content directly from your MCP client. With the right skills, agents can build and update frames, components, variables, and auto layout in your Figma files using your design system as the source of truth.
+
+    **Note:** We're quickly improving how Figma supports AI agents. The write to canvas feature will eventually be a usage-based paid feature, but is currently available for free during the beta period.
+
+- **Generate code from selected frames**
+
+  Select a Figma frame and turn it into code. Great for product teams building new flows or iterating on app features.
+
+- **Extract design context**
+
+  Pull in variables, components, and layout data directly into your IDE. This is especially useful for design systems and component-based workflows.
+
+- **Code smarter with Code Connect**
+
+  Boost output quality by reusing your actual components. Code Connect keeps your generated code consistent with your codebase.
+
+  [Learn more about Code Connect →](https://help.figma.com/hc/en-us/articles/23920389749655-Code-Connect)
+
+- **Generate Figma designs from running web pages** *(specific clients only)*
+
+  Capture a live, locally-running web page as pixel-perfect Figma design layers via `generate_figma_design`. Best used as a visual reference alongside the AI-powered generation workflow above.
+
+## Installation & Setup
+
+### Connect to the Figma MCP server
+
+Different MCP clients require slightly different setups. Follow the instructions below for your specific client to connect to the Figma MCP server.
+
+#### VS Code
+
+1. Use the shortcut `⌘ Shift P` to search for `MCP:Add Server`.
+2. Select `HTTP`.
+3. Paste the server url `https://mcp.figma.com/mcp` in the search bar. Then hit `Enter`.
+4. When you're prompted for a server ID, enter `figma`.
+5. Select whether you want to add this server globally or only for the current workspace. Once confirmed, you'll see a configuration like this in your `mcp.json` file:
+
+```json
+{
+  "servers": {
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    }
+  }
+}
 ```
 
-**Windows (PowerShell):**
-```powershell
-irm https://raw.githubusercontent.com/shiki/figma-everyworkflow/main/install.ps1 | iex
-```
+6. Open the chat toolbar using `⌥⌘B` or `⌃⌘I` and switch to **Agent** mode.
+7. With the chat open, type in `#get_design_context` to confirm that the Figma MCP server tools are available. If no tools are listed, restart VS Code.
 
-**本地安装 | Local Install:**
-```bash
-git clone https://github.com/shiki/figma-everyworkflow.git
-cd figma-everyworkflow
-bash install.sh
-```
+> [!NOTE]
+> You must have [GitHub Copilot](https://github.com/features/copilot) enabled on your account to use MCP in VS Code.
+>
+> For more information, see [VS Code's official documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers).
 
----
+#### Cursor
 
-## 功能特性 | Features
+The recommended way to set up the Figma MCP server in Cursor is by installing the Figma Plugin, which includes MCP server settings as well as Agent Skills for common workflows.
 
-| 功能 Feature | 描述 Description |
-|---|---|
-| 写入 Figma 画布 | 直接在 Figma 中创建/修改帧、组件、变量 |
-| Write to Canvas | Create/modify frames, components, variables in Figma |
-| 从选区生成代码 | 选中 Figma 帧，自动生成前端代码 |
-| Code from Selection | Select a Figma frame and generate frontend code |
-| 提取设计上下文 | 获取变量、组件、布局信息 |
-| Extract Design Context | Pull variables, components, layout data |
-| Code Connect | 将 Figma 组件与代码库精准对应 |
-| Code Connect | Map Figma components to your codebase |
-| 设计系统规则生成 | 自动生成符合你项目的设计系统规则文件 |
-| Design System Rules | Auto-generate rules tailored to your project |
-| 自然语言驱动 | 用自然语言描述需求，无需记忆复杂命令 |
-| Natural Language | Describe what you want in plain language |
-
----
-
-## 安装说明 | Installation Guide
-
-### Cursor（推荐 / Recommended）
-
-在 Cursor 聊天框中输入：
+Install the plugin by typing the following command in Cursor's agent chat:
 
 ```
 /add-plugin figma
 ```
 
-或手动添加配置 `Cursor → Settings → MCP`：
+The plugin includes:
+
+- MCP server configuration for the Figma MCP server
+- Skills for **generating UI designs in Figma** from text, HTML, or wireframes (`figma-generate-ui`)
+- Skills for implementing designs, connecting components via Code Connect, and creating design system rules
+- Rules for proper asset handling from the Figma MCP server
+
+<details>
+<summary>Manual setup</summary>
+
+1. Open **Cursor → Settings → Cursor Settings**.
+2. Go to the **MCP** tab.
+3. Click **+ Add new global MCP server**.
+4. Enter the following configuration and save:
 
 ```json
 {
@@ -80,196 +115,498 @@ bash install.sh
 }
 ```
 
-### VS Code
+For more information, see [Cursor's official documentation](https://docs.cursor.com/context/model-context-protocol).
 
-1. `⌘ Shift P` → 搜索 `MCP:Add Server`
-2. 选择 `HTTP`，粘贴 `https://mcp.figma.com/mcp`
-3. Server ID 填写 `figma`
-4. 在 Agent 模式下输入 `#get_design_context` 验证
+</details>
 
-### Claude Code
+#### Claude Code
+
+The recommended way to set up the Figma MCP server in Claude Code is by installing the Figma Plugin, which includes MCP server settings as well as Agent Skills for common workflows.
+
+Run the following command to install the plugin from Anthropic's official plugin marketplace.
+
+```bash
+claude plugin install figma@claude-plugins-official
+```
+
+Learn more about Anthropic's [Claude Code Plugins](https://claude.com/blog/claude-code-plugins) and [Agent Skills](https://claude.com/blog/skills).
+
+<details>
+<summary>Manual setup</summary>
+
+1. Open your terminal and run:
 
 ```bash
 claude mcp add --transport http figma https://mcp.figma.com/mcp
 ```
 
----
+2. Use the following commands to check MCP settings and manage servers:
 
-## 自然语言使用指南 | Natural Language Usage Guide
+- List all configured servers
+  ```bash
+  claude mcp list
+  ```
+- Get details for a specific server
+  ```bash
+  claude mcp get my-server
+  ```
+- Remove a server
+  ```bash
+  claude mcp remove my-server
+  ```
 
-> 无需记忆命令，用你最自然的语言描述需求即可。  
-> No need to memorize commands — just describe what you want naturally.
+For more information, see [Anthropic's official documentation](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials#set-up-model-context-protocol-mcp).
 
-### 设计→代码 | Design to Code
+</details>
 
-```
-帮我把这个 Figma 链接的设计用 React + Tailwind 实现：[figma链接]
+#### Other editors
 
-Implement this Figma design as React + Tailwind: [figma url]
-```
+Other code editors and tools that support Streamable HTTP can also connect to the Figma MCP server.
 
-```
-把这个 Figma 选区转换为 Vue 组件
+If you're using a different editor or tool, check its documentation to confirm it supports Streamable HTTP based communication. If it does, you can manually add the Figma MCP server using this configuration:
 
-Convert my Figma selection into a Vue component
-```
-
-```
-用我的项目组件库来实现这个 Figma 设计，组件路径在 src/components/ui
-
-Implement this Figma design using my components at src/components/ui
-```
-
-### 写入 Figma | Write to Figma
-
-```
-在我的 Figma 文件中新建一个按钮组件，使用我设计系统的颜色变量
-
-Create a button component in my Figma file using my design system color variables
-```
-
-```
-把我的网页 UI 截图并导入到 Figma
-
-Capture my web UI and import it into Figma
+```json
+{
+  "mcpServers": {
+    "figma": {
+      "url": "https://mcp.figma.com/mcp"
+    }
+  }
+}
 ```
 
-### 设计 Token | Design Tokens
+## Prompting your MCP client
 
-```
-列出这个 Figma 选区用到的所有颜色和间距变量
+The Figma MCP server introduces a set of tools that help LLMs work with Figma in both directions: generating designs into Figma, and extracting designs out of Figma as code.
 
-List all color and spacing variables used in my Figma selection
-```
+### Generate UI designs in Figma (text → Figma)
 
-```
-获取我的设计系统所有字体和颜色 token
+You can ask the agent to build a complete Figma screen from scratch — no Figma URL needed:
 
-Get all typography and color tokens from my design system
-```
+- "Create a SaaS dashboard for a project management tool in Figma, using our design system"
+- "Convert src/pages/pricing.html to a Figma design"
+- "Reproduce this wireframe [attach image] in high-fidelity using our component library"
+- "Generate a login screen and a signup screen in Figma, desktop 1440px"
+- "Design a mobile onboarding flow (390px) for a fintech app"
 
-### 组件映射 | Code Connect
+The agent uses the `figma-generate-ui` skill together with `use_figma` and `search_design_system` to discover your design system components, plan the layout, and build each section incrementally with validation after every step.
 
-```
-帮我把 Figma 的 Button 组件和我代码库的 Button 组件建立 Code Connect 映射
+### Implement Figma designs as code (Figma → code)
 
-Set up Code Connect between my Figma Button component and my codebase Button
-```
+To implement an existing Figma design as code, copy the link to a frame or layer in Figma and prompt your client:
 
-```
-给我建议哪些 Figma 组件可以和我的代码组件建立映射
+1. Copy the link to a frame or layer in Figma.
+2. Prompt your client to help you implement the design at the selected URL.
 
-Suggest Code Connect mappings between Figma components and my code components
-```
+<img src="https://help.figma.com/hc/article_attachments/34049303807895" width="300" />
 
-### 图表与流程图 | Diagrams
+> [!NOTE]
+> Your client won't be able to navigate to the selected URL, but it will extract the node-id that is required for the MCP server to identify which object to return information about.
 
-```
-在 FigJam 中生成用户登录流程的流程图
+## Tools and usage suggestions
 
-Generate a user login flowchart in FigJam
-```
+### AI UI Generation workflow (`figma-generate-ui` skill)
 
-```
-画一个支付系统的时序图
+**Supported file types:** Figma Design
 
-Create a sequence diagram for the payment system
-```
+The `figma-generate-ui` skill orchestrates multiple MCP tools (`use_figma`, `search_design_system`, `get_screenshot`, `create_new_file`) to generate complete Figma screens from any of these inputs:
 
----
-
-## MCP 工具速查 | MCP Tools Reference
-
-| 工具 Tool | 用途 Usage | 场景 When to Use |
-|---|---|---|
-| `get_design_context` | 获取设计上下文 / Get design context | 生成代码时 / Code generation |
-| `get_variable_defs` | 获取变量定义 / Get variables | 提取 token 时 / Token extraction |
-| `get_screenshot` | 截图参考 / Screenshot reference | 视觉校验时 / Visual validation |
-| `get_code_connect_map` | 获取 Code Connect 映射 / Get CC map | 组件复用时 / Component reuse |
-| `use_figma` | 写入 Figma / Write to Figma | 创建/修改设计时 / Create/edit designs |
-| `search_design_system` | 搜索设计系统 / Search design system | 复用组件时 / Reuse components |
-| `generate_diagram` | 生成流程图 / Generate diagrams | 画图时 / Diagrams |
-| `get_metadata` | 获取层级结构 / Get layer metadata | 大型设计时 / Large selections |
-| `create_design_system_rules` | 生成设计系统规则 / Create DS rules | 初始化项目时 / Project setup |
-| `create_new_file` | 新建 Figma 文件 / Create new file | 新项目时 / New project |
-
----
-
-## 最佳实践 | Best Practices
-
-### 结构化你的 Figma 文件 | Structure Your Figma File
-
-- **使用组件** 封装所有可复用的元素（按钮、卡片、输入框等）  
-  Use **Components** for all reusable elements
-- **绑定 Code Connect** 将 Figma 组件与代码精准对应  
-  Link components via **Code Connect** for precise mapping
-- **使用变量** 管理颜色、间距、圆角、字体  
-  Use **Variables** for colors, spacing, radius, typography
-- **语义化命名** 图层用 `CardContainer` 而非 `Group 5`  
-  Use **semantic layer names** like `CardContainer` not `Group 5`
-- **启用 Auto Layout** 传达响应式意图  
-  Enable **Auto Layout** to express responsive intent
-
-### 提示词技巧 | Prompting Tips
-
-- 先提供框架偏好：「用 Vue + Tailwind 实现」  
-  Specify your framework: "Implement using Vue + Tailwind"
-- 指定组件路径：「使用 src/components/ui 中的组件」  
-  Specify component paths: "Use components from src/components/ui"
-- 分块处理大设计：先生成各个子组件，再组合  
-  Break large designs into sections, generate components individually
-
----
-
-## 费率限制 | Rate Limits
-
-| 计划 Plan | 限制 Limit |
+| Input | Example prompt |
 |---|---|
-| Starter / View / Collab | 每月最多 6 次工具调用 / Up to 6 calls/month |
-| Dev / Full (Professional+) | 遵循 Figma REST API Tier 1 限制 / Tier 1 API rate limits |
+| Natural language | `"Create a fintech dashboard in Figma with balance card, transaction list, and quick-action bar"` |
+| HTML file | `"Convert src/pages/landing.html to a Figma design using our design system"` |
+| Wireframe image | `"Reproduce this wireframe [image] in high-fidelity Figma using our component library"` |
+| Figma prototype URL | `"Upgrade this lo-fi prototype to high-fidelity: https://figma.com/design/..."` |
+| Multiple variants | `"Generate a light mode and dark mode version of the pricing page side by side"` |
 
-> 写入画布（`use_figma`）当前处于免费 Beta 阶段，后续将成为付费功能。  
-> Write-to-canvas is currently free during Beta and will become a paid feature.
+**Generation workflow:**
 
+1. Parses the input (text, HTML, or wireframe) into a structured screen specification
+2. Resolves the target Figma file (or creates a new one)
+3. Discovers the design system — components, variables, text/effect styles — via `search_design_system` and existing screen inspection
+4. Presents a generation plan and waits for confirmation
+5. Builds each section with `use_figma`, one section per call, validating with `get_screenshot` after each
+6. Reports completion with a summary of components used and next steps
+
+**Design quality guarantees:**
+- Real content on every component instance (no placeholder text)
+- Design system components preferred over hand-drawn primitives
+- Variable bindings for colors and spacing (not hardcoded hex/px values)
+- Auto-layout throughout for responsive-ready screens
+- Section-level screenshots validate each step before proceeding
+
+### `get_design_context`
+
+**Supported file types:** Figma Design, Figma Make
+
+Use this to get design context for your Figma selection using the MCP server. The default output is **React + Tailwind**, but you can customize this through your prompts:
+
+- Change the framework
+
+  - "Generate my Figma selection in Vue."
+  - "Generate my Figma selection in plain HTML + CSS."
+  - "Generate my Figma selection in iOS."
+
+- Use your components
+
+  - "Generate my Figma selection using components from src/components/ui"
+  - "Generate my Figma selection using components from src/ui and style with Tailwind"
+
+  You can paste links to the frame or component in Figma before prompting.
+
+[Learn how to set up Code Connect for better component reuse →](https://help.figma.com/hc/en-us/articles/23920389749655-Code-Connect)
+
+### `generate_figma_design` (specific clients only, remote only)
+
+**Supported file types:** Figma Design
+
+Captures a **running, locally-served web page** as pixel-perfect Figma design layers. Best used as a visual reference alongside the `figma-generate-ui` skill — capture the running app for layout accuracy, then use `use_figma` to compose proper design system component instances on top.
+
+- "Start a local server for my app and capture the UI in a new Figma file"
+- "Capture the login page to [Figma file URL]"
+
+> **Tip:** To generate designs from a *description*, *HTML file*, or *wireframe* (without a running server), use the `figma-generate-ui` skill instead — it works offline and produces design-system-linked component instances.
+
+### `get_variable_defs`
+
+**Supported file types:** Figma Design
+
+Returns variables and styles used in your selection—like colors, spacing, and typography.
+
+- List all tokens used
+  - "Get the variables used in my Figma selection."
+- Focus on a specific type
+  - "What color and spacing variables are used in my Figma selection?"
+- Get both names and values
+  - "List the variable names and their values used in my Figma selection."
+
+### `get_code_connect_map`
+
+**Supported file types:** Figma Design
+
+Retrieves a mapping between Figma node IDs and their corresponding code components in your codebase. Specifically, it returns an object where each key is a Figma node ID, and the value contains:
+
+- `codeConnectSrc`: The location of the component in your codebase (e.g., a file path or URL).
+- `codeConnectName`: The name of the component in your codebase.
+
+This mapping is used to connect Figma design elements directly to their React (or other framework) implementations, enabling seamless design-to-code workflows and ensuring that the correct components are used for each part of the design. If a Figma node is connected to a code component, this function helps you identify and use the exact component in your project.
+
+### `add_code_connect_map`
+
+**Supported file types:** Figma Design
+
+Creates mappings between Figma node IDs and corresponding code components in your codebase. This improves design-to-code workflow quality by linking specific design elements to their code implementations.
+
+### `get_code_connect_suggestions`
+
+**Supported file types:** Figma Design
+
+Detects and suggests Code Connect mappings between Figma components and code components in your codebase. Works in conjunction with `send_code_connect_mappings` to confirm suggestions.
+
+### `send_code_connect_mappings`
+
+**Supported file types:** Figma Design
+
+Confirms and finalizes Code Connect mappings after suggestions are reviewed through `get_code_connect_suggestions`.
+
+### `get_screenshot`
+
+**Supported file types:** Figma Design, FigJam
+
+This takes a screenshot of your selection to preserve layout fidelity. Keep this on unless you're managing token limits.
+
+### `create_design_system_rules`
+
+**Supported file types:** No file context required
+
+Use this tool to create a rule file that gives agents the context they need to generate high-quality front end code. Rule files help align output with your design system and tech stack, improving accuracy and ensuring code is tailored to your needs.
+
+After running the tool, save the output to the appropriate `rules/` or `instructions/` directory so your agent can access it during code generation.
+
+### `get_metadata`
+
+**Supported file types:** Figma Design
+
+Returns an XML representation of your selection containing basic properties such as layer IDs, names, types, position and sizes. You can use `get_design_context` on the resulting outline to retrieve only the styling information of the design you need.
+
+This is useful for very large designs where `get_design_context` produces output with a large context size. It also works with multiple selections or the whole page if nothing is selected.
+
+### `get_figjam`
+
+**Supported file types:** FigJam
+
+This tool returns metadata for FigJam diagrams in XML format, similar to `get_metadata`. In addition to returning basic properties like layer IDs, names, types, positions, and sizes, it also includes screenshots of the nodes.
+
+### `generate_diagram`
+
+**Supported file types:** No file context required
+
+Generates FigJam diagrams from Mermaid syntax. The agent can generate diagrams from natural language descriptions without requiring you to write Mermaid syntax. Supports flowcharts, Gantt charts, state diagrams, and sequence diagrams.
+
+- "Create a flowchart for the user authentication flow using the Figma MCP generate_diagram tool"
+- "Generate a sequence diagram for the payment processing system"
+
+### `whoami` (remote only)
+
+**Supported file types:** No file context required
+
+This tool returns the identity of the user that's authenticated to Figma, including:
+
+- The user's email address
+- All of the plans the user belongs to
+- The seat type the user has on each plan
+
+### `use_figma`
+
+:::note
+**Note:** We're quickly improving how Figma supports AI agents. This will eventually be a usage-based paid feature, but is currently available for free during the beta period.
+:::
+
+**Supported file types:** Figma Design, FigJam
+
+The general-purpose tool for writing to Figma. Use it to create, edit, delete, or inspect any object in a Figma file: pages, frames, components, variants, variables, styles, text, images, and more.
+
+When relevant, the agent will first check your design system for existing components to reuse before creating anything from scratch.
+
+The `use_figma` tool is best invoked with the `figma-use` skill.
+
+**You can ask it to:**
+
+- **Create or modify designs**
+  - `add a new frame to my Figma file`
+  - `update the button component to use the correct fill color`
+- **Set up design tokens, variables, or styles**
+  - `create a color variable collection from my design tokens`
+  - `set up spacing tokens in my Figma file`
+- **Build or update component and variant systems**
+  - `generate variants for the card component`
+  - `sync my Figma components with my latest code changes`
+- **Fix layout or visual issues**
+  - `fix the auto-layout spacing on the nav component`
+  - `update the typography styles to match the design spec`
+
+### `search_design_system`
+
+**Supported file types:** Figma Design
+
+Searches across all connected design libraries to find components, variables, and styles matching a text query. Returns matching assets so the agent can reuse existing design system elements rather than creating new ones from scratch.
+
+**You can ask it to:**
+
+- **Find components**
+  - `search for a button component in my design system`
+  - `find a card component I can use for this layout`
+- **Look up tokens**
+  - `search for the primary color variable in my design system`
+  - `find spacing tokens in my design libraries`
+- **Narrow by type**
+  - `search for icon styles in my design system`
+
+### `create_new_file`
+
+**Supported file types:** No file context required
+
+Creates a new blank Figma Design or FigJam file in your drafts folder. If you belong to multiple plans, you'll be asked which team or organization to create the file in.
+
+**You can ask it to:**
+
+- **Create a new design file**
+  - `create a new Figma file called "Homepage Redesign"`
+- **Create a new FigJam file**
+  - `create a new FigJam board for our project planning session`
+
+
+# MCP best practices
+
+The quality of the generated code depends on several factors. Some controlled by you, and some by the tools you're using. Here are some suggestions for clean, consistent output.
+
+## Structure your Figma file for better code
+
+Provide the best context for your design intent, so the MCP and your AI assistant can generate code that's clear, consistent, and aligned with your system.
+
+- **Use components** for anything reused (buttons, cards, inputs, etc.)
+- **Link components to your codebase** via Code Connect. This is the best way to get consistent component reuse in code. Without it, the model is guessing.
+- **Use variables** for spacing, color, radius, and typography.
+- **Name layers semantically** (e.g. `CardContainer`, not `Group 5`)
+- **Use Auto layout** to communicate responsive intent.
+
+> [!TIP]
+> Resize the frame in Figma to check that it behaves as expected before generating code.
+
+- **Use annotations and dev resources** to convey design intent that's hard to capture from visuals alone, like how something should behave, align, or respond.
+
+## Write effective prompts to guide the AI
+
+MCP gives your AI assistant structured Figma data, but your prompt drives the result. Good prompts can:
+
+- Align the result with your framework or styling system
+- Follow file structure and naming conventions
+- Add code to specific paths (e.g. `src/components/ui`)
+- Add or modify code in existing files instead of creating new ones
+- Follow specific layout systems (e.g. grid, flexbox, absolute)
+
+**Examples — generating UI designs in Figma:**
+
+- "Create a SaaS landing page in Figma using our design system"
+- "Convert src/pages/dashboard.html to a Figma design, desktop 1440px"
+- "Reproduce this wireframe [image] in our Figma design system"
+- "Generate a light and dark version of the pricing page"
+- "Build a mobile checkout flow (390px) in Figma for our e-commerce app"
+
+**Useful constraints to include in generate-UI prompts:**
+- Screen size: "desktop 1440px", "tablet 768px", "mobile 390px"
+- Design system: "use our Material design system", "use the tokens from [Figma URL]"
+- Content fidelity: "use real copy from the HTML", "keep the wireframe's text labels"
+- Output scope: "only build the hero and pricing sections"
+
+**Examples — implementing Figma designs as code:**
+
+- "Generate iOS SwiftUI code from this frame"
+- "Use Chakra UI for this layout"
+- "Use `src/components/ui` components"
+- "Add this to `src/components/marketing/PricingCard.tsx`"
+- "Use our `Stack` layout component"
+
+Think of prompts like a brief to a teammate. Clear intent leads to better results.
+
+## Trigger specific tools when needed
+
+The MCP supports different tools, and each one provides your AI assistant with a different kind of structured context. Sometimes, the assistant doesn't automatically pick the right one, especially as more tools become available. If results are off, try being explicit in your prompt.
+
+- **figma-generate-ui skill** builds a complete Figma screen from a description, HTML file, or wireframe. Use when you want to *create* content in Figma, not read from it.
+  - "Use the figma-generate-ui skill to create a pricing page"
+- **get_design_context** provides a structured **React + Tailwind** representation of your Figma selection. This is a starting point that your AI assistant can translate into any framework or code style, depending on your prompt.
+- **get_variable_defs** extracts the variables and styles used in your selection (color, spacing, typography, etc). This helps the model reference your tokens directly in the generated code.
+- **search_design_system** finds components, variables, and styles across all connected design libraries. The generate-ui skill uses this automatically, but you can also call it directly.
+  - "Search for a button component in my design system"
+- **use_figma** is the low-level write tool for direct Figma canvas operations.
+
+For example, if you're getting raw code instead of tokens, try something like:
+
+- "Get the variable names and values used in this frame."
+
+## Add custom rules
+
+Set project-level guidance to keep output consistent—just like onboarding notes for a new developer. These are things like:
+
+- Preferred layout primitives
+- File organization
+- Naming patterns
+- What not to hardcode
+
+You can provide this in whatever format your MCP client uses for instruction files.
+
+**Examples:**
+
+#### Ensure consistently good output
+
+```yaml
+## Figma MCP Integration Rules
+These rules define how to translate Figma inputs into code for this project and must be followed for every Figma-driven change.
+
+### Required flow (do not skip)
+1. Run get_design_context first to fetch the structured representation for the exact node(s).
+2. If the response is too large or truncated, run get_metadata to get the high‑level node map and then re‑fetch only the required node(s) with get_design_context.
+3. Run get_screenshot for a visual reference of the node variant being implemented.
+4. Only after you have both get_design_context and get_screenshot, download any assets needed and start implementation.
+5. Translate the output (usually React + Tailwind) into this project's conventions, styles and framework.  Reuse the project's color tokens, components, and typography wherever possible.
+6. Validate against Figma for 1:1 look and behavior before marking complete.
+
+### Implementation rules
+- Treat the Figma MCP output (React + Tailwind) as a representation of design and behavior, not as final code style.
+- Replace Tailwind utility classes with the project's preferred utilities/design‑system tokens when applicable.
+- Reuse existing components (e.g., buttons, inputs, typography, icon wrappers) instead of duplicating functionality.
+- Use the project's color system, typography scale, and spacing tokens consistently.
+- Respect existing routing, state management, and data‑fetch patterns already adopted in the repo.
+- Strive for 1:1 visual parity with the Figma design. When conflicts arise, prefer design‑system tokens and adjust spacing or sizes minimally to match visuals.
+- Validate the final UI against the Figma screenshot for both look and behavior.
+```
+
+#### Cursor
+
+```yaml
 ---
+description: Figma MCP server rules
+globs:
+alwaysApply: true
+---
+- The Figma MCP server provides an assets endpoint which can serve image and SVG assets
+- IMPORTANT: If the Figma MCP server returns a localhost source for an image or an SVG, use that image or SVG source directly
+- IMPORTANT: DO NOT import/add new icon packages, all the assets should be in the Figma payload
+- IMPORTANT: do NOT use or create placeholders if a localhost source is provided
+```
 
-## 项目结构 | Project Structure
+#### Claude Code
+
+```markdown
+# MCP Servers
+
+## Figma MCP server rules
+
+- The Figma MCP server provides an assets endpoint which can serve image and SVG assets
+- IMPORTANT: If the Figma MCP server returns a localhost source for an image or an SVG, use that image or SVG source directly
+- IMPORTANT: DO NOT import/add new icon packages, all the assets should be in the Figma payload
+- IMPORTANT: do NOT use or create placeholders if a localhost source is provided
+```
+
+#### General quality rules
 
 ```
-figma-everyworkflow/
-├── README.md              # 本文档 / This file
-├── install.sh             # macOS/Linux 一键安装脚本
-├── install.ps1            # Windows 一键安装脚本
-├── .mcp.json              # MCP 配置文件 / MCP config
-├── skills/                # AI Agent 技能文件 / Agent skills
-│   ├── implement-design/  # 设计实现技能
-│   ├── generate-design/   # 设计生成技能
-│   ├── code-connect/      # Code Connect 技能
-│   └── design-system/     # 设计系统规则技能
-├── prompts/               # 自然语言提示词模板 / Prompt templates
-│   ├── design-to-code.md
-│   ├── write-to-figma.md
-│   └── tokens-and-variables.md
-└── docs/                  # 详细文档 / Detailed docs
-    ├── setup.md
-    ├── workflows.md
-    └── troubleshooting.md
+- IMPORTANT: Always use components from `/path_to_your_design_system` when possible
+- Prioritize Figma fidelity to match designs exactly
+- Avoid hardcoded values, use design tokens from Figma where available
+- Follow WCAG requirements for accessibility
+- Add component documentation
+- Place UI components in `/path_to_your_design_system`; avoid inline styles unless truly necessary
 ```
 
----
+Adding these once can dramatically reduce the need for repetitive prompting and ensures that teammates or agents consistently follow the same expectations.
 
-## 贡献 | Contributing
+Be sure to check your IDE or MCP client's documentation for how to structure rules, and experiment to find what works best for your team. Clear, consistent guidance often leads to better, more reusable code with less back-and-forth.
 
-欢迎提交 Issue 和 PR！  
-Issues and PRs are welcome!
+### Break down large selections
 
----
+Break screens into smaller parts (like components or logical chunks) for faster, more reliable results.
 
-## 致谢 | Credits
+Large selections can slow the tools down, cause errors, or result in incomplete responses, especially when there's too much context for the model to process. Instead:
 
-- [Figma MCP Server Guide](https://github.com/figma/mcp-server-guide) — 原始项目 / Original project
-- [Figma Developer Documentation](https://help.figma.com/hc/en-us/articles/32132100833559) — 官方文档 / Official docs
+1. Generate code for smaller sections or individual components (e.g. Card, Header, Sidebar)
+2. If it feels slow or stuck, reduce your selection size
 
----
+This helps keep the context manageable and results more predictable, both for you and for the model.
 
-*由 [shiki](https://github.com/shiki) 维护 | Maintained by [shiki](https://github.com/shiki)*
+If something in the output doesn't look quite right, it usually helps to revisit the basics: how the Figma file is structured, how the prompt is written, and what context is being sent. Following the best practices above can make a big difference, and often leads to more consistent, reusable code.
+
+## Bringing Make context to your agent
+
+The Make + MCP integration makes it easier to take prototypes from **design to production**. By connecting Make projects directly to your agent via MCP, you can extract resources and reuse them in your codebase. This reduces friction when extending prototypes into real applications, and ensures that design intent is faithfully carried through to implementation.
+
+With this integration, you can:
+
+- **Fetch project context** directly from Make (individual files or the whole project)
+- **Prompt to use existing code components** instead of starting from scratch
+- **Extend prototypes with real data** to validate and productionize designs faster
+
+### How it works
+
+> [!NOTE]
+> This integration leverages the MCP **resources capability**, which allows your agent to fetch context directly from Make projects. It is available only on clients that support MCP resources.
+
+#### Steps to fetch resources from Make
+
+1. **Prompt your agent to fetch context** by providing a valid Make link
+2. **Receive a list of available files** from your Make project
+3. **Download the files you want to fetch** when prompted
+
+### Example workflow
+
+**Goal:** Implement a popup component in your production codebase that matches the design and behavior defined in Make.
+
+1. Share your Make project link with your agent.
+2. Prompt the agent: _"I want to get the popup component behavior and styles from this Make file and implement it using my popup component."_
+
+Your agent will fetch the relevant context from Make and guide you in extending your existing popup component with the prototype's functionality and styles.
+
+# Icon Guidelines
+
+See the [Figma Brand Usage Guidelines](https://www.figma.com/using-the-figma-brand) for displaying any icons contained in this repo.
